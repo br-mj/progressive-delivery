@@ -1,0 +1,123 @@
+
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+
+metadata:
+  name: orders-api-canary-health
+  namespace: progressive-delivery
+
+spec:
+  args:
+    - name: pod-hash
+
+  metrics:
+
+    # ------------------------------------
+    # 1. Minimum Request Volume
+    # ------------------------------------
+
+    - name: request-volume
+
+      initialDelay: 20s
+      interval: 30s
+      count: 3
+
+      successCondition: result[0] >= 20
+
+      failureLimit: -1
+
+      consecutiveSuccessLimit: 1
+
+      provider:
+        prometheus:
+          address: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
+
+          query: |
+            sum(
+              increase(
+                http_requests_total{
+                  app="orders-api",
+                  rollouts_pod_template_hash="{{args.pod-hash}}"
+                }[2m]
+              )
+            ) or vector(0)
+
+    # ------------------------------------
+    # 2. HTTP Error Rate
+    # ------------------------------------
+
+    - name: error-rate
+
+      initialDelay: 20s
+      interval: 30s
+      count: 3
+
+      successCondition: len(result) > 0 && result[0] < 0.01
+
+      failureCondition: len(result) > 0 && result[0] >= 0.01
+
+      failureLimit: 0
+      consecutiveSuccessLimit: 2
+
+      provider:
+        prometheus:
+          address: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
+
+          query: |
+            (
+              sum(
+                rate(
+                  http_requests_total{
+                    app="orders-api",
+                    status=~"5..",
+                    rollouts_pod_template_hash="{{args.pod-hash}}"
+                  }[2m]
+                )
+              ) or vector(0)
+            )
+            /
+            clamp_min(
+              sum(
+                rate(
+                  http_requests_total{
+                    app="orders-api",
+                    rollouts_pod_template_hash="{{args.pod-hash}}"
+                  }[2m]
+                )
+              ),
+              1e-9
+            )
+
+    # ------------------------------------
+    # 3. P95 Latency
+    # ------------------------------------
+
+    - name: p95-latency
+
+      initialDelay: 20s
+      interval: 30s
+      count: 3
+
+      successCondition: len(result) > 0 && result[0] < 0.3
+
+      failureCondition: len(result) > 0 && result[0] >= 0.3
+
+      failureLimit: 0
+      consecutiveSuccessLimit: 2
+
+      provider:
+        prometheus:
+          address: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
+
+          query: |
+            histogram_quantile(
+              0.95,
+              sum by (le) (
+                rate(
+                  http_request_duration_seconds_bucket{
+                    app="orders-api",
+                    rollouts_pod_template_hash="{{args.pod-hash}}"
+                  }[5m]
+                )
+              )
+            )

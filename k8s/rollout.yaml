@@ -1,0 +1,148 @@
+
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+
+metadata:
+  name: orders-api
+  namespace: progressive-delivery
+
+spec:
+  replicas: 5
+
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 300
+  minReadySeconds: 5
+
+  selector:
+    matchLabels:
+      app: orders-api
+
+  template:
+    metadata:
+      labels:
+        app: orders-api
+
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 15
+
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: orders-api
+
+          image: orders-api:v1
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: orders-api-v5-config
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+            limits:
+              cpu: 500m
+              memory: 256Mi
+
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+  strategy:
+    canary:
+      stableService: orders-api-stable
+      canaryService: orders-api-canary
+
+      trafficRouting:
+        plugins:
+          argoproj-labs/gatewayAPI:
+            httpRoute: orders-api-smoke
+            namespace: progressive-delivery
+
+      maxSurge: 1
+      maxUnavailable: 0
+
+      steps:
+
+        # Stage 1: 20%
+        - setWeight: 20
+
+        - pause:
+            duration: 2m
+
+        - analysis:
+            templates:
+              - templateName: orders-api-canary-health
+
+            args:
+              - name: pod-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
+
+        # Stage 2: 40%
+        - setWeight: 40
+
+        - analysis:
+            templates:
+              - templateName: orders-api-canary-health
+
+            args:
+              - name: pod-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
+
+        # Stage 3: 60%
+        - setWeight: 60
+
+        - analysis:
+            templates:
+              - templateName: orders-api-canary-health
+
+            args:
+              - name: pod-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
+
+        # Stage 4: 80%
+        - setWeight: 80
+
+        - analysis:
+            templates:
+              - templateName: orders-api-canary-health
+
+            args:
+              - name: pod-hash
+                valueFrom:
+                  podTemplateHashValue: Latest

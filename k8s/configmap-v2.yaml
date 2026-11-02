@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: orders-api-v2-config
+  namespace: progressive-delivery
+
+data:
+  APP_VERSION: "v2"
+  ERROR_RATE: "0"
+  DELAY_MS: "0"

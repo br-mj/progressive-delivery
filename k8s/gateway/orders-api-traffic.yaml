@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-api-stable
+  namespace: progressive-delivery
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: orders-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-api-canary
+  namespace: progressive-delivery
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: orders-api
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: orders-api-smoke
+  namespace: progressive-delivery
+spec:
+  parentRefs:
+    - name: orders-api-gateway
+  hostnames:
+    - orders-haproxy.test
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: orders-api-stable
+          kind: Service
+          port: 80
+          weight: 100
+        - name: orders-api-canary
+          kind: Service
+          port: 80
+          weight: 0

@@ -1,0 +1,29 @@
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+
+metadata:
+  name: orders-api
+  namespace: progressive-delivery
+
+  labels:
+    monitoring: enabled
+
+spec:
+  namespaceSelector:
+    matchNames:
+      - progressive-delivery
+
+  
+  selector:
+    matchLabels:
+      monitoring: enabled
+
+  podTargetLabels:
+  - rollouts-pod-template-hash
+
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 10s
+      scrapeTimeout: 5s

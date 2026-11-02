@@ -1,0 +1,23 @@
+
+controller:
+  ingressClassResource:
+    enabled: true
+    default: false
+
+  service:
+    enabled: true
+    type: LoadBalancer
+
+  publishService:
+    enabled: true
+
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+    limits:
+      cpu: 500m
+      memory: 384Mi

@@ -1,0 +1,53 @@
+
+alertmanager:
+  enabled: false
+
+defaultRules:
+  create: false
+
+grafana:
+  enabled: true
+
+  defaultDashboardsEnabled: false
+
+  persistence:
+    enabled: false
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+kubeStateMetrics:
+  enabled: false
+
+nodeExporter:
+  enabled: false
+
+prometheus:
+  enabled: true
+
+  prometheusSpec:
+    replicas: 1
+
+    retention: 12h
+
+    scrapeInterval: 10s
+    evaluationInterval: 15s
+
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+
+      limits:
+        cpu: "1"
+        memory: 1Gi

@@ -1,0 +1,155 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Rollout","metadata":{"annotations":{},"name":"orders-api","namespace":"progressive-delivery"},"spec":{"minReadySeconds":5,"progressDeadlineSeconds":300,"replicas":5,"revisionHistoryLimit":5,"selector":{"matchLabels":{"app":"orders-api"}},"strategy":{"canary":{"maxSurge":1,"maxUnavailable":0,"steps":[{"setWeight":20},{"analysis":{"args":[{"name":"pod-hash","valueFrom":{"podTemplateHashValue":"Latest"}}],"templates":[{"templateName":"orders-api-canary-health"}]}},{"setWeight":40},{"analysis":{"args":[{"name":"pod-hash","valueFrom":{"podTemplateHashValue":"Latest"}}],"templates":[{"templateName":"orders-api-canary-health"}]}},{"setWeight":60},{"analysis":{"args":[{"name":"pod-hash","valueFrom":{"podTemplateHashValue":"Latest"}}],"templates":[{"templateName":"orders-api-canary-health"}]}},{"setWeight":80},{"analysis":{"args":[{"name":"pod-hash","valueFrom":{"podTemplateHashValue":"Latest"}}],"templates":[{"templateName":"orders-api-canary-health"}]}}]}},"template":{"metadata":{"labels":{"app":"orders-api"}},"spec":{"automountServiceAccountToken":false,"containers":[{"envFrom":[{"configMapRef":{"name":"orders-api-v3-config"}}],"image":"orders-api:v1","imagePullPolicy":"IfNotPresent","livenessProbe":{"failureThreshold":3,"httpGet":{"path":"/healthz","port":"http"},"initialDelaySeconds":10,"periodSeconds":10,"timeoutSeconds":2},"name":"orders-api","ports":[{"containerPort":8000,"name":"http","protocol":"TCP"}],"readinessProbe":{"failureThreshold":3,"httpGet":{"path":"/readyz","port":"http"},"periodSeconds":5,"timeoutSeconds":2},"resources":{"limits":{"cpu":"500m","memory":"256Mi"},"requests":{"cpu":"100m","memory":"128Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":10001}}],"securityContext":{"seccompProfile":{"type":"RuntimeDefault"}},"terminationGracePeriodSeconds":15}}}}
+    rollout.argoproj.io/revision: "13"
+  creationTimestamp: "2026-10-31T20:49:52Z"
+  generation: 13
+  name: orders-api
+  namespace: progressive-delivery
+  resourceVersion: "92168"
+  uid: e89841ef-14a7-46ec-b608-b207e4a74f4b
+spec:
+  minReadySeconds: 5
+  progressDeadlineSeconds: 300
+  replicas: 5
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: orders-api
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      steps:
+      - setWeight: 20
+      - analysis:
+          args:
+          - name: pod-hash
+            valueFrom:
+              podTemplateHashValue: Latest
+          templates:
+          - templateName: orders-api-canary-health
+      - setWeight: 40
+      - analysis:
+          args:
+          - name: pod-hash
+            valueFrom:
+              podTemplateHashValue: Latest
+          templates:
+          - templateName: orders-api-canary-health
+      - setWeight: 60
+      - analysis:
+          args:
+          - name: pod-hash
+            valueFrom:
+              podTemplateHashValue: Latest
+          templates:
+          - templateName: orders-api-canary-health
+      - setWeight: 80
+      - analysis:
+          args:
+          - name: pod-hash
+            valueFrom:
+              podTemplateHashValue: Latest
+          templates:
+          - templateName: orders-api-canary-health
+  template:
+    metadata:
+      labels:
+        app: orders-api
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: orders-api-v3-config
+        image: orders-api:v1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 2
+        name: orders-api
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /readyz
+            port: http
+          periodSeconds: 5
+          timeoutSeconds: 2
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 10001
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 15
+status:
+  HPAReplicas: 5
+  availableReplicas: 5
+  blueGreen: {}
+  canary: {}
+  conditions:
+  - lastTransitionTime: "2026-10-31T20:50:03Z"
+    lastUpdateTime: "2026-10-31T20:50:03Z"
+    message: Rollout has minimum availability
+    reason: AvailableReason
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-11-01T13:52:27Z"
+    lastUpdateTime: "2026-11-01T13:52:27Z"
+    message: Rollout is paused
+    reason: RolloutPaused
+    status: "False"
+    type: Paused
+  - lastTransitionTime: "2026-11-01T13:58:09Z"
+    lastUpdateTime: "2026-11-01T13:58:09Z"
+    message: RolloutCompleted
+    reason: RolloutCompleted
+    status: "True"
+    type: Completed
+  - lastTransitionTime: "2026-11-01T13:58:09Z"
+    lastUpdateTime: "2026-11-01T13:58:09Z"
+    message: Rollout is healthy
+    reason: RolloutHealthy
+    status: "True"
+    type: Healthy
+  - lastTransitionTime: "2026-11-01T13:58:09Z"
+    lastUpdateTime: "2026-11-01T13:58:09Z"
+    message: ReplicaSet "orders-api-6748c6fd9d" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  currentPodHash: 6748c6fd9d
+  currentStepHash: 84574fb79c
+  currentStepIndex: 8
+  observedGeneration: "13"
+  phase: Healthy
+  readyReplicas: 5
+  replicas: 5
+  selector: app=orders-api
+  stableRS: 6748c6fd9d
+  updatedReplicas: 5

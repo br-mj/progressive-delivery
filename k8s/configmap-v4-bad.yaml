@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: orders-api-v4-bad-config
+  namespace: progressive-delivery
+
+data:
+  APP_VERSION: "v4-bad"
+  ERROR_RATE: "1.0"
+  DELAY_MS: "800"

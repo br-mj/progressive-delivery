@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orders-api-v5-config
+  namespace: progressive-delivery
+data:
+  APP_VERSION: "v5"
+  ERROR_RATE: "0"
+  DELAY_MS: "0"
